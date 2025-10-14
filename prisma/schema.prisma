@@ -1,0 +1,272 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  provider      String    @default("CREDENTIALS")
+  role          String    @default("USER")
+  locale        String    @default("es-ES")
+  currency      String    @default("EUR")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  categories    Category[]
+  transactions  Transaction[]
+  budgets       Budget[]
+  goals         Goal[]
+  
+  // ERP Multi-tenant
+  userCompanies UserCompany[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Category {
+  id        String     @id @default(cuid())
+  userId    String
+  name      String
+  type      String
+  color     String     @default("#3B82F6")
+  createdAt DateTime   @default(now())
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId])
+  @@map("categories")
+}
+
+model Transaction {
+  id            String        @id @default(cuid())
+  userId        String
+  categoryId    String
+  amount        Float
+  type          String
+  date          DateTime
+  description   String?
+  paymentMethod String        @default("CARD")
+  tags          String        @default("")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([userId, type])
+  @@index([userId, categoryId])
+  @@map("transactions")
+}
+
+model Budget {
+  id        String     @id @default(cuid())
+  userId    String
+  categoryId String?
+  period    String       @default("MONTHLY")
+  month     Int?
+  year      Int
+  amount    Float
+  createdAt DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, year, month])
+  @@map("budgets")
+}
+
+model Goal {
+  id            String   @id @default(cuid())
+  userId        String
+  name          String
+  targetAmount  Float
+  currentAmount Float  @default(0)
+  deadline      DateTime?
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("goals")
+}
+
+// ========================================
+// ERP MODELS - Multi-tenant & Accounting
+// ========================================
+
+model Company {
+  id              String   @id @default(cuid())
+  name            String
+  cif             String   @unique
+  address         String?
+  city            String?
+  postalCode      String?
+  country         String   @default("ES")
+  phone           String?
+  email           String?
+  website         String?
+  fiscalYearStart String   @default("01-01") // MM-DD format
+  logo            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  userCompanies     UserCompany[]
+  invoices          Invoice[]
+  accountingEntries AccountingEntry[]
+  accountPlans      AccountPlan[]
+  taxReports        TaxReport[]
+
+  @@map("companies")
+}
+
+model UserCompany {
+  id        String   @id @default(cuid())
+  userId    String
+  companyId String
+  role      String   @default("USER") // ADMIN, ACCOUNTANT, USER
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@map("user_companies")
+}
+
+model Invoice {
+  id           String   @id @default(cuid())
+  companyId    String
+  number       String
+  series       String   @default("A")
+  customerName String
+  customerNIF  String?
+  customerAddress String?
+  date         DateTime
+  dueDate      DateTime?
+  subtotal     Float
+  taxRate      Float    @default(21.0) // IVA 21%
+  taxAmount    Float
+  total        Float
+  status       String   @default("DRAFT") // DRAFT, ISSUED, PAID, CANCELLED
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, series, number])
+  @@index([companyId, date])
+  @@map("invoices")
+}
+
+model AccountingEntry {
+  id            String   @id @default(cuid())
+  companyId     String
+  date          DateTime
+  description   String
+  debitAccount  String   // Account code (430, 572, etc.)
+  creditAccount String   // Account code
+  amount        Float
+  reference     String?  // Invoice ID, Transaction ID, etc.
+  createdAt     DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, date])
+  @@index([companyId, debitAccount])
+  @@index([companyId, creditAccount])
+  @@map("accounting_entries")
+}
+
+model AccountPlan {
+  id        String  @id @default(cuid())
+  companyId String
+  code      String  // 430, 572, 700, etc.
+  name      String
+  type      String  // ASSET, LIABILITY, EQUITY, INCOME, EXPENSE
+  parentId  String?
+  level     Int     @default(1)
+  isActive  Boolean @default(true)
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  parent  AccountPlan? @relation("AccountPlanHierarchy", fields: [parentId], references: [id])
+  children AccountPlan[] @relation("AccountPlanHierarchy")
+
+  @@unique([companyId, code])
+  @@index([companyId, type])
+  @@map("account_plans")
+}
+
+model TaxReport {
+  id              String   @id @default(cuid())
+  companyId       String
+  type            String   // IVA, IRPF, IS (Impuesto Sociedades)
+  period          String   // Q1/2025, 2025, etc.
+  totalPayable    Float    @default(0)
+  totalReceivable Float    @default(0)
+  netAmount       Float    @default(0)
+  status          String   @default("DRAFT") // DRAFT, SUBMITTED, PAID
+  dueDate         DateTime?
+  submittedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, type, period])
+  @@index([companyId, type])
+  @@map("tax_reports")
+}
+
+// Enums converted to strings for SQLite compatibility
