@@ -3,6 +3,9 @@ import { hash } from 'bcryptjs';
 import { prisma } from '@/server/db';
 import { registerSchema } from '@/lib/validations/auth';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -30,13 +33,13 @@ export async function POST(request: NextRequest) {
       data: {
         name: validatedData.name,
         email: validatedData.email,
-        passwordHash: hashedPassword,
+        password: hashedPassword,
         provider: 'CREDENTIALS',
       },
     });
 
     // Remove password from response
-    const { passwordHash, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = user;
 
     return NextResponse.json(
       { 
@@ -48,15 +51,32 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Registration error:', error);
     
+    // Handle validation errors
     if (error instanceof Error && error.name === 'ZodError') {
       return NextResponse.json(
-        { message: 'Datos inválidos' },
+        { message: 'Datos inválidos', error: error.message },
         { status: 400 }
       );
     }
 
+    // Handle Prisma errors
+    if (error instanceof Error && error.message.includes('Unique constraint')) {
+      return NextResponse.json(
+        { message: 'El email ya está registrado' },
+        { status: 400 }
+      );
+    }
+
+    // Handle database connection errors
+    if (error instanceof Error && error.message.includes('connect')) {
+      return NextResponse.json(
+        { message: 'Error de conexión a la base de datos' },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
-      { message: 'Error interno del servidor' },
+      { message: 'Error interno del servidor', error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

@@ -43,7 +43,7 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
-  passwordHash  String?
+  password      String?
   provider      String    @default("CREDENTIALS")
   role          String    @default("USER")
   locale        String    @default("es-ES")
