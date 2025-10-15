@@ -3,6 +3,9 @@ import { AIInsights } from '@/features/powerbi/ai-insights';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 function AIInsightsSkeleton() {
   return (
     <div className="space-y-6">

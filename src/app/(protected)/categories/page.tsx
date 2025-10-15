@@ -3,6 +3,9 @@ import { CategoriesContent } from '@/features/categories/categories-content';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 function CategoriesSkeleton() {
   return (
     <div className="space-y-6">

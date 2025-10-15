@@ -26,6 +26,8 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  // Deshabilitar prerenderizado para páginas protegidas
+  trailingSlash: false,
   async headers() {
     return [
       {

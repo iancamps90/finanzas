@@ -3,6 +3,9 @@ import { InvoicingPage } from '@/features/invoicing/invoicing-page';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default function Invoicing() {
   return (
     <div className="space-y-6">

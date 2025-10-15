@@ -2,6 +2,9 @@ import { Suspense } from 'react';
 import { TransactionsContent } from '@/features/transactions/transactions-content';
 import { TransactionsSkeleton } from '@/components/transactions-skeleton';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default function TransactionsPage() {
   return (
     <div className="space-y-6">

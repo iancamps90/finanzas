@@ -6,6 +6,9 @@ import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 function NewTransactionSkeleton() {
   return (
     <div className="space-y-6">

@@ -2,6 +2,9 @@ import { Suspense } from 'react';
 import { DashboardContent } from '@/features/dashboard/dashboard-content';
 import { DashboardSkeleton } from '@/components/dashboard-skeleton';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
