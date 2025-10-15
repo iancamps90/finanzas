@@ -6,14 +6,16 @@ import { prisma } from '@/server/db';
 export async function GET() {
   const session = await getServerSession(authOptions);
 
-  if (!session) {
+  if (!session?.user?.id) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
+
+  const userId = session.user.id;
 
   try {
     // Get user's companies
     const userCompanies = await prisma.userCompany.findMany({
-      where: { userId: session.user.id },
+      where: { userId },
       include: { company: true },
     });
 
