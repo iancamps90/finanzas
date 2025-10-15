@@ -11,18 +11,18 @@ try {
   console.log('📦 Generando cliente Prisma...');
   execSync('npx prisma generate', { stdio: 'inherit' });
 
-  // 2. Ejecutar migraciones si hay DATABASE_URL
+  // 2. Ejecutar setup de producción
   if (process.env.DATABASE_URL) {
-    console.log('🗄️ Ejecutando migraciones de base de datos...');
+    console.log('🗄️ Ejecutando setup de producción...');
     try {
-      execSync('npx prisma migrate deploy', { stdio: 'inherit' });
-      console.log('✅ Migraciones ejecutadas correctamente');
+      execSync('node scripts/setup-production.js', { stdio: 'inherit' });
+      console.log('✅ Setup de producción completado');
     } catch (error) {
-      console.log('⚠️ Error en migraciones, continuando con build...');
+      console.log('⚠️ Error en setup, continuando con build...');
       console.log('Esto es normal si la base de datos no está configurada aún');
     }
   } else {
-    console.log('⚠️ No hay DATABASE_URL configurada, saltando migraciones');
+    console.log('⚠️ No hay DATABASE_URL configurada, saltando setup');
   }
 
   // 3. Ejecutar build de Next.js

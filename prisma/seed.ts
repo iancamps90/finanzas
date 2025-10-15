@@ -24,7 +24,7 @@ async function main() {
     data: {
       name: 'Usuario Demo',
       email: 'demo@example.com',
-      passwordHash: await hash('demo123', 12),
+      password: await hash('demo123', 12),
       provider: 'CREDENTIALS',
       role: 'USER',
       locale: 'es-ES',
@@ -36,7 +36,7 @@ async function main() {
     data: {
       name: 'Admin Demo',
       email: 'admin@example.com',
-      passwordHash: await hash('admin123', 12),
+      password: await hash('admin123', 12),
       provider: 'CREDENTIALS',
       role: 'ADMIN',
       locale: 'es-ES',
